@@ -1,25 +1,40 @@
 <li class="list-group-item">
   <div class="d-flex">
     <div class="flex-shrink-0">
-      <%= image_tag comment.author.avatar_image_url, class: "rounded-circle me-2 img-cover img-small" %>
+      <%= image_tag comment.author.avatar_image_url,
+                    class: "rounded-circle me-2 img-cover img-small" %>
     </div>
     <div class="flex-grow-1 ms-3">
       <div class="d-flex align-items-center justify-content-between">
         <h5 class="mt-0">
-          <%= link_to comment.author.username, user_path(comment.author.username), class: "text-dark link-underline-dark link-underline-opacity-0 link-underline-opacity-100-hover" %>
+          <%= link_to comment.author.username,
+                      user_path(comment.author.username),
+                      class: "text-dark link-underline-dark
+                              link-underline-opacity-0
+                              link-underline-opacity-100-hover" %>
         </h5>
 
         <div>
-          <%= link_to edit_comment_path(comment), class: "btn btn-link btn-sm text-muted" do %>
-            <i class="fas fa-edit fa-fw"></i>
+          <% if policy(comment).update? %>
+            <%= link_to edit_comment_path(comment),
+                        class: "btn btn-link btn-sm text-muted" do %>
+              <i class="fas fa-edit fa-fw"></i>
+            <% end %>
           <% end %>
 
-          <%= button_to comment, method: :delete, class: "btn btn-link btn-sm text-muted", form_class: "btn btn-sm btn-link" do %>
-            <i class="fas fa-trash fa-fw"></i>
+          <% if policy(comment).destroy? %>
+            <%= button_to comment,
+                          method: :delete,
+                          class: "btn btn-link btn-sm text-muted",
+                          form_class: "btn btn-sm btn-link",
+                          data: { confirm: "Are you sure?" } do %>
+              <i class="fas fa-trash fa-fw"></i>
+            <% end %>
           <% end %>
         </div>
       </div>
+
       <p><%= comment.body %></p>
     </div>
-  </div> 
+  </div>
 </li>

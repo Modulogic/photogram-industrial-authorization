@@ -1,19 +1,14 @@
 class LikesController < ApplicationController
-  before_action :set_like, only: %i[ show edit update destroy ]
-  
-  before_action :is_an_authorized_user, only: [:destroy, :create ]
+  before_action :set_like, only: %i[show edit update destroy]
+  before_action :is_an_authorized_user, only: %i[destroy create]
+  before_action :ensure_user_is_authorized, only: [:show]
 
-  def is_an_authorized_user
-    if !@like.owner.private? || @like.owner == current_user ||current_user.leaders.include?(@like.owner)
-      redirect_back(fallback_location: root_url, alert "Not authorized")
-    end
-  end
-  # GET /likes or /likes.json
+  # GET /likes
   def index
     @likes = Like.all
   end
 
-  # GET /likes/1 or /likes/1.json
+  # GET /likes/1
   def show
   end
 
@@ -26,9 +21,10 @@ class LikesController < ApplicationController
   def edit
   end
 
-  # POST /likes or /likes.json
+  # POST /likes
   def create
     @like = Like.new(like_params)
+    authorize @like
 
     respond_to do |format|
       if @like.save
@@ -41,7 +37,7 @@ class LikesController < ApplicationController
     end
   end
 
-  # PATCH/PUT /likes/1 or /likes/1.json
+  # PATCH/PUT /likes/1
   def update
     respond_to do |format|
       if @like.update(like_params)
@@ -54,9 +50,11 @@ class LikesController < ApplicationController
     end
   end
 
-  # DELETE /likes/1 or /likes/1.json
+  # DELETE /likes/1
   def destroy
+    authorize @like
     @like.destroy
+
     respond_to do |format|
       format.html { redirect_back fallback_location: @like.photo, notice: "Like was successfully destroyed." }
       format.json { head :no_content }
@@ -64,13 +62,24 @@ class LikesController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_like
-      @like = Like.find(params[:id])
-    end
 
-    # Only allow a list of trusted parameters through.
-    def like_params
-      params.require(:like).permit(:fan_id, :photo_id)
+  def set_like
+    @like = Like.find(params[:id])
+  end
+
+  def like_params
+    params.require(:like).permit(:fan_id, :photo_id)
+  end
+
+  def ensure_user_is_authorized
+    authorize @user
+  end
+
+  def is_an_authorized_user
+    photo = @like&.photo || Photo.find_by(id: params[:like][:photo_id])
+
+    unless photo && (!photo.owner.private? || photo.owner == current_user || current_user.leaders.include?(photo.owner))
+      redirect_back(fallback_location: root_url, alert: "Not authorized")
     end
+  end
 end
